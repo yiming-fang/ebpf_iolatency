@@ -1,14 +1,14 @@
 # Define the compiler and the flags
 CLANG ?= clang
 CFLAGS = -O2 -target bpf -c -g
-USERSPACE_CFLAGS = -O2 -Wall -I/usr/include
+USERSPACE_CFLAGS = -O2
 USERSPACE_LINKER_FLAGS = -lbpf
 
 # Userspace programs
-USERSPACE_SRC = syscount.c
+USERSPACE_SRC = hello_world.c
 USERSPACE_BIN = $(USERSPACE_SRC:.c=.out)
 # Define the BPF program source and the output object file
-BPF_SRC = syscount.bpf.c
+BPF_SRC = hello_world.bpf.c
 BPF_OBJ = $(BPF_SRC:.c=.o)
 
 # Get Clang's default includes on this system. We'll explicitly add these dirs
@@ -29,7 +29,7 @@ $(BPF_OBJ): $(BPF_SRC)
 	$(CLANG) $(CFLAGS) $(CLANG_BPF_SYS_INCLUDES) $(BPF_SRC) -o $(BPF_OBJ)
 
 $(USERSPACE_BIN): $(USERSPACE_SRC)
-	$(CLANG) $(USERSPACE_CFLAGS) $(CLANG_BPF_SYS_INCLUDES) $(USERSPACE_SRC) -o $(USERSPACE_BIN) $(USERSPACE_LINKER_FLAGS)
+	$(CLANG) $(USERSPACE_CFLAGS) $(USERSPACE_SRC) -o $(USERSPACE_BIN) $(USERSPACE_LINKER_FLAGS)
 
 
 clean:
