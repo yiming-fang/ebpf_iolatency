@@ -5,10 +5,10 @@ USERSPACE_CFLAGS = -O2
 USERSPACE_LINKER_FLAGS = -lbpf
 
 # Userspace programs
-USERSPACE_SRC = hello_world.c
+USERSPACE_SRC = iolatency.c
 USERSPACE_BIN = $(USERSPACE_SRC:.c=.out)
 # Define the BPF program source and the output object file
-BPF_SRC = hello_world.bpf.c
+BPF_SRC = iolatency.bpf.c
 BPF_OBJ = $(BPF_SRC:.c=.o)
 
 # Get Clang's default includes on this system. We'll explicitly add these dirs
