@@ -17,9 +17,12 @@ void print_histogram(__u64 arr[]) {
         int lb = i ? 1 << i : 0;
         int ub = (1 << (i + 1)) - 1;
         printf("%5d -> %-7d: %-10llu | ", lb, ub, arr[i]);
-        for (int j = 0; j < arr[i]; j++)
+        int num_stars = arr[i] ? arr[i] / 10 + 1 : 0;
+        if (num_stars >= star_col)
+            num_stars = star_col;
+        for (int j = 0; j < num_stars; j++)
             printf("*");
-        for (int j = arr[i]; j < star_col; j++)
+        for (int j = num_stars; j < star_col; j++)
             printf(" ");
         printf("|\n");
     }
@@ -86,9 +89,9 @@ int main(int argc, char **argv) {
     int map_fd = bpf_map__fd(hist_map);
 
     // Output stats
-    __u64 counts[MAX_HIST] = {0};
     while (1) {
         sleep(period);
+        __u64 counts[MAX_HIST] = {0};
         __u64 *curr_key = NULL;
         __u64 next_key;
         __u64 value;
