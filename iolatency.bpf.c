@@ -35,38 +35,40 @@ static __always_inline int rq_start(struct request *rq) {
     return 0;
 }
 static __always_inline u64 compute_bucket(u64 diff) {
-    return 0; //TODO
+    for (u64 i = 0; i < MAX_HIST; i++) {
+        if (diff < ((u64) 1) << (i + 1))
+            return i;
+    }
+    return MAX_HIST - 1;
 }
 
-SEC("tracepoint/block/block_rq_issue")
+SEC("tp_btf/block_rq_issue")
 int BPF_PROG(block_rq_issue, struct request *rq) {
     return rq_start(rq);
 }
 
-SEC("tracepoint/block/block_rq_insert")
+SEC("tp_btf/block_rq_insert")
 int BPF_PROG(block_rq_insert, struct request *rq) {
     return rq_start(rq);
 }
 
-SEC("tracepoint/block/block_rq_complete")
+SEC("tp_btf/block_rq_complete")
 int BPF_PROG(block_rq_complete, struct request *rq, int error, 
              unsigned int nr_bytes) {
-    u64 *t1p, *t2p;
     u64 t2 = bpf_ktime_get_ns();
-    t1p = bpf_map_lookup_elem(&rqs, &rq);
-    t2p = &t2;
+    u64 *t1p = bpf_map_lookup_elem(&rqs, &rq);
+    if (!t1p || *t1p > t2)
+        return 1;
+    bpf_map_delete_elem(&rqs, &rq);
 
-    if (*t1p > *t2p)
-        return 0;
-    
-    u64 diff = (*t1p - *t2p) / 1000;
+    u64 diff = (t2 - *t1p) / 1000U;
     u64 bucket = compute_bucket(diff);
     u64 *cnt = bpf_map_lookup_elem(&hist, &bucket);
-    if (cnt) {
-        *cnt += 1;
-    } else {
+    if (!cnt) {
         u64 one = 1;
         bpf_map_update_elem(&hist, &bucket, &one, BPF_ANY);
+    } else {
+        *cnt += 1;
     }
 
     return 0;
